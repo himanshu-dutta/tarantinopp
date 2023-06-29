@@ -3,11 +3,11 @@
 #include <mutex>
 
 #include "tarantinopp/concurrency/threadpool.h"
-#include "tarantinopp/core/server.h"
 #include "tarantinopp/core/types.h"
 #include "tarantinopp/network/base.h"
 #include "tarantinopp/network/tcp.h"
 #include "tarantinopp/network/unix.h"
+#include "tarantinopp/server/server.h"
 
 void threadpool_example();
 void socket_tcp_example();
@@ -98,6 +98,7 @@ void socket_unix_example() {
 void application_server_example() {
   using namespace tarantinopp;
   using namespace tarantinopp::network;
+  using namespace tarantinopp::server;
 
   std::shared_ptr<Logger> logger(new Logger("example", LogLevel::trace));
   ApplicationServer as("example", nullptr, 2048, logger);
