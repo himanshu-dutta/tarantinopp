@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  tarantinopp-dev:
+    build: .
+    command: nginx -g 'daemon off;'
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/app
+      - ${PWD}/examples/nginx/server.conf:/etc/nginx/sites-enabled/default
+      - /app/build
