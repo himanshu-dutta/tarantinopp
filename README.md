@@ -1,4 +1,4 @@
-# TARANTINO++
+# Tarantino++
 
 Tarantino++ (or Tarantinopp) is a C++ reimplementation of [Tarantino](https://github.com/himanshu-dutta/tarantino) web framework. Similar to before, this is a "for learning only" implementation of a web framework.
 
