@@ -1,12 +1,14 @@
 #include "tarantinopp/server/server.h"
 
+#include "tarantinopp/protocol/http/status.h"
+
 namespace tarantinopp {
 namespace server {
-ApplicationServer::ApplicationServer(std::string name, Handler handler,
+ApplicationServer::ApplicationServer(std::string name, Application application,
                                      size_t blockSize,
                                      std::shared_ptr<Logger> logger)
     : m_name(name),
-      m_handler(handler),
+      m_application(application),
       m_blockSize(blockSize),
       m_logger(logger) {}
 
@@ -15,27 +17,37 @@ void ApplicationServer::operator()(
   auto [requestLine, headers, bufferedBody] = readRequest(client);
 
   Environment env = generateEnvironment(requestLine, headers);
+  ReceiveFn receive = generateReceive(client, bufferedBody, env);
+  SendFn send = generateSend(client, env);
 
+  // REQUEST
+  getLogger()->trace("###########################################");
   getLogger()->info(
-      "[ENVIRONMENT] method: {0}, path: {1}, httpVersion: {2}, rawPath: {3}, "
+      "[✅] method: {0}, path: {1}, httpVersion: {2}, rawPath: {3}, "
       "queryString: {4}, rootPath: {5}",
       env.method, env.path, env.httpVersion, byteVectorToString(env.rawPath),
       byteVectorToString(env.queryString), env.rootPath);
-
   for (auto header : env.headers)
-    getLogger()->info("[Header] {0}: {1}", byteVectorToString(header.first),
+    getLogger()->info("[✨] {0}: {1}", byteVectorToString(header.first),
                       byteVectorToString(header.second));
+  bool moreBody = false;
+  do {
+    ReceiveEvent re = receive();
+    moreBody = re.moreBody;
+    getLogger()->info("[🎊] Received {} Bytes of the body", re.body.size());
+  } while (moreBody);
+  getLogger()->trace("###########################################");
 
-  getLogger()->info("Buffered Body Size: {0}", bufferedBody.size());
+  // RESPONSE
+  std::vector<std::pair<ByteVector, ByteVector>> responseHeaders{
+      {stringToByteVector("Content-Type"), stringToByteVector("text/html")}};
 
-  ByteVector responseBuffer;
-  std::string response =
-      "HTTP/1.1 200 OK\r\nCONNECTION: keep-alive\r\nCONTENT-TYPE: "
-      "text/html\r\nCONTENT-LENGTH: "
-      "48\r\n\r\n<h1>A message "
-      "generated from example server</h1>";
-  responseBuffer.insert(responseBuffer.end(), response.begin(), response.end());
-  client->write(responseBuffer);
+  send(SendEvent(SendEvent::EventTypeStart, http::HttpStatus::STATUS_200_OK,
+                 responseHeaders));
+  send(SendEvent(
+      SendEvent::EventTypeBody,
+      stringToByteVector("<h1>A message generated from example server</h1>"),
+      false));
 
   client->disconnect();
 }
@@ -161,6 +173,17 @@ Environment ApplicationServer::generateEnvironment(ByteVector requestLine,
   auto headersList = parseHeaders(headers);
 
   return Environment(method, path, httpVersion, headersList);
+}
+
+ReceiveFn ApplicationServer::generateReceive(
+    std::shared_ptr<network::SocketClient> client, ByteVector bufferedBody,
+    Environment env) {
+  return Receive(client, bufferedBody, env, m_blockSize);
+}
+
+SendFn ApplicationServer::generateSend(
+    std::shared_ptr<network::SocketClient> client, Environment env) {
+  return Send(client, env);
 }
 }  // namespace server
 }  // namespace tarantinopp

@@ -12,17 +12,17 @@
 #include "tarantinopp/core/utils.h"
 #include "tarantinopp/network/base.h"
 #include "tarantinopp/server/environ.h"
+#include "tarantinopp/server/receive.h"
+#include "tarantinopp/server/send.h"
 
 namespace tarantinopp {
 namespace server {
-using Send = int;
-using Receive = int;
 
-using Handler = std::function<void(Environment, Send, Receive)>;
+using Application = std::function<void(Environment, ReceiveFn, SendFn)>;
 
 class ApplicationServer {
  public:
-  ApplicationServer(std::string name, Handler handler,
+  ApplicationServer(std::string name, Application application,
                     size_t blockSize = MAX_BUFFER_SIZE,
                     std::shared_ptr<Logger> logger = nullptr);
   void operator()(std::shared_ptr<network::SocketClient>);
@@ -32,9 +32,10 @@ class ApplicationServer {
   std::tuple<ByteVector, ByteVector, ByteVector> readRequest(
       std::shared_ptr<network::SocketClient> client);
   Environment generateEnvironment(ByteVector requestLine, ByteVector headers);
-  void generateReceive(std::shared_ptr<network::SocketClient> client,
-                       ByteVector bufferedBody);
-  void generateSend(std::shared_ptr<network::SocketClient> client);
+  ReceiveFn generateReceive(std::shared_ptr<network::SocketClient> client,
+                            ByteVector bufferedBody, Environment env);
+  SendFn generateSend(std::shared_ptr<network::SocketClient> client,
+                      Environment env);
 
   std::tuple<ByteVector, ByteVector, ByteVector> parseRequestLine(
       ByteVector requestLine);
@@ -43,7 +44,7 @@ class ApplicationServer {
 
  private:
   std::string m_name;
-  Handler m_handler;
+  Application m_application;
   size_t m_blockSize;
   std::shared_ptr<Logger> m_logger;
 };
