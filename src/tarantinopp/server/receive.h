@@ -14,7 +14,6 @@ class ReceiveEvent {
  public:
   ReceiveEvent(ByteVector __body, bool __moreBody);
   ReceiveEvent(const ReceiveEvent& other);
-  ReceiveEvent();
   ReceiveEvent& operator=(const ReceiveEvent& other);
 
  public:
@@ -35,6 +34,7 @@ class Receive {
   Receive(std::shared_ptr<network::SocketClient> client,
           ByteVector bufferedBody, Environment env,
           size_t blockSize = MAX_BUFFER_SIZE);
+  Receive(const Receive& other);
   ReceiveEvent operator()();
 
  private:

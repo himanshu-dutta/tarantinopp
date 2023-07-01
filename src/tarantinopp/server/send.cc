@@ -26,12 +26,17 @@ SendEvent::SendEvent(std::string __type, ByteVector __body, bool __moreBody)
       m_body(__body),
       m_moreBody(__moreBody) {}
 
-SendEvent::SendEvent()
+SendEvent::SendEvent(const SendEvent& other)
     : eventType(m_eventType),
       status(m_status),
       headers(m_headers),
       body(m_body),
-      moreBody(m_moreBody) {}
+      moreBody(m_moreBody),
+      m_eventType(other.m_eventType),
+      m_status(other.m_status),
+      m_headers(other.m_headers),
+      m_body(other.m_body),
+      m_moreBody(other.m_moreBody) {}
 
 SendEvent& SendEvent::operator=(const SendEvent& other) {
   if (this == &other) {
@@ -50,6 +55,11 @@ Send::Send(std::shared_ptr<network::SocketClient> client, Environment env)
     : m_client(client),
       m_httpVersion("HTTP/" + env.httpVersion),
       m_socketClosed(false) {}
+
+Send::Send(const Send& other)
+    : m_client(other.m_client),
+      m_httpVersion(other.m_httpVersion),
+      m_socketClosed(other.m_socketClosed) {}
 
 void Send::operator()(SendEvent se) {
   if (se.eventType == SendEvent::EventTypeStart)

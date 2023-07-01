@@ -13,9 +13,8 @@ class SendEvent {
  public:
   SendEvent(std::string __type, std::string __status,
             std::vector<std::pair<ByteVector, ByteVector>> __headers);
-
   SendEvent(std::string __type, ByteVector __body, bool __moreBody);
-  SendEvent();
+  SendEvent(const SendEvent&);
   SendEvent& operator=(const SendEvent& other);
 
  public:
@@ -42,6 +41,7 @@ using SendFn = std::function<void(SendEvent)>;
 class Send {
  public:
   Send(std::shared_ptr<network::SocketClient> client, Environment env);
+  Send(const Send& other);
   void operator()(SendEvent se);
 
  private:

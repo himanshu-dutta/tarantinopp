@@ -15,8 +15,6 @@ ReceiveEvent::ReceiveEvent(const ReceiveEvent& other)
       m_body(other.m_body),
       m_moreBody(other.m_moreBody) {}
 
-ReceiveEvent::ReceiveEvent() : body(m_body), moreBody(m_moreBody) {}
-
 ReceiveEvent& ReceiveEvent::operator=(const ReceiveEvent& other) {
   if (this == &other) {
     return *this;
@@ -35,12 +33,20 @@ Receive::Receive(std::shared_ptr<network::SocketClient> client,
   parseHeaders(env);
 }
 
+Receive::Receive(const Receive& other)
+    : m_client(other.m_client),
+      m_buffer(other.m_buffer),
+      m_receiveType(other.m_receiveType),
+      m_contentLength(other.m_contentLength),
+      m_blockSize(other.m_blockSize),
+      m_contentReceived(other.m_contentReceived) {}
+
 void Receive::parseHeaders(Environment env) {
   m_contentLength = 0;
 
   for (auto header : env.headers) {
     if (toLower(byteVectorToString(header.first)) ==
-        http::HttpHeader::ContentLength) {
+        http::Header::ContentLength) {
       m_contentLength =
           std::stoll(std::string(header.second.begin(), header.second.end()));
       m_receiveType = ReceiveType::ContentLength;
