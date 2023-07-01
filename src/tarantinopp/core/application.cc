@@ -46,7 +46,7 @@ void Application::operator()(server::Environment env, server::ReceiveFn receive,
   // RESPONSE
   ////////////
   send(server::SendEvent(server::SendEvent::EventTypeStart,
-                         http::HttpStatus::STATUS_200_OK,
+                         http::Status::STATUS_200_OK,
                          std::vector<std::pair<ByteVector, ByteVector>>{
                              {stringToByteVector("Content-Type"),
                               stringToByteVector("text/html")}}));
