@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include "tarantinopp/concurrency/threadpool.h"
+#include "tarantinopp/core/application.h"
 #include "tarantinopp/core/types.h"
 #include "tarantinopp/network/base.h"
 #include "tarantinopp/network/tcp.h"
@@ -41,9 +42,7 @@ void socket_tcp_example() {
 
   const size_t BUFF_SIZE = 1024;
   std::shared_ptr<Logger> logger(new Logger("example", LogLevel::trace));
-  TCPSocket socket("0.0.0.0", 8000, 5, 1024, logger);
-  socket.getLogger()->info("Starting the server...");
-  socket([&socket](std::shared_ptr<SocketClient> client) {
+  auto handler = [logger](std::shared_ptr<SocketClient> client) {
     ByteVector req_buff;
     req_buff = client->read(BUFF_SIZE);
     std::string req_str(req_buff.begin(), req_buff.end());
@@ -58,10 +57,13 @@ void socket_tcp_example() {
     resp_buff.insert(resp_buff.end(), response.begin(), response.end());
     client->write(resp_buff);
 
-    socket.getLogger()->info("{0} -- \"{1}\" {2}", client->getClientInfo(),
-                             req_hl, 200);
+    logger->info("{0} -- \"{1}\" {2}", client->getClientInfo(), req_hl, 200);
     client->disconnect();
-  });
+  };
+
+  TCPSocket socket(handler, "0.0.0.0", 8000, 5, 1024, logger);
+  socket.getLogger()->info("Starting the server...");
+  socket();
 }
 
 void socket_unix_example() {
@@ -71,10 +73,7 @@ void socket_unix_example() {
   const size_t BUFF_SIZE = 1024;
 
   std::shared_ptr<Logger> logger(new Logger("example", LogLevel::trace));
-  UnixSocket socket("example.sock", 5, 1024, logger);
-  socket.getLogger()->info("Starting the server...");
-
-  socket([&socket](std::shared_ptr<SocketClient> client) {
+  auto handler = [logger](std::shared_ptr<SocketClient> client) {
     ByteVector req_buff;
     req_buff = client->read(BUFF_SIZE);
     std::string req_str(req_buff.begin(), req_buff.end());
@@ -89,10 +88,13 @@ void socket_unix_example() {
     resp_buff.insert(resp_buff.end(), response.begin(), response.end());
     client->write(resp_buff);
 
-    socket.getLogger()->info("{0} -- \"{1}\" {2}", client->getClientInfo(),
-                             req_hl, 200);
+    logger->info("{0} -- \"{1}\" {2}", client->getClientInfo(), req_hl, 200);
     client->disconnect();
-  });
+  };
+
+  UnixSocket socket(handler, "example.sock", 5, 1024, logger);
+  socket.getLogger()->info("Starting the server...");
+  socket();
 }
 
 void application_server_example() {
@@ -101,8 +103,10 @@ void application_server_example() {
   using namespace tarantinopp::server;
 
   std::shared_ptr<Logger> logger(new Logger("example", LogLevel::trace));
-  ApplicationServer as("example", nullptr, 2048, logger);
-  UnixSocket server("example.sock", 5, 1024, logger);
-  //   TCPSocket server("0.0.0.0", 8000, 5, 1024, logger);
-  server(as);
+
+  Application app("example", logger);
+  ApplicationServer as(app, 2048, logger);
+  UnixSocket server(as, "example.sock", 5, 1024, logger);
+  logger->info("Starting the server...");
+  server();
 }
