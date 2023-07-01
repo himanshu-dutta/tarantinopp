@@ -4,7 +4,7 @@
 
 namespace tarantinopp {
 namespace http {
-class HttpStatus {
+class Status {
  public:
   // 1xx Informational
   static const std::string STATUS_100_Continue;

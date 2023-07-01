@@ -4,7 +4,7 @@
 
 namespace tarantinopp {
 namespace http {
-class HttpHeader {
+class Header {
  public:
   static const std::string Accept;
   static const std::string AcceptCharset;
