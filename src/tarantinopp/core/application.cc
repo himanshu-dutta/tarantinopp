@@ -17,30 +17,39 @@ void Application::operator()(server::Environment env, server::ReceiveFn receive,
   // REQUEST
   ////////////
   getLogger()->trace("###########################################");
-  getLogger()->info(
-      "[✅] method: {0}, path: {1}, httpVersion: {2}, rawPath: {3}, "
-      "queryString: {4}, rootPath: {5}",
-      env.method, env.path, env.httpVersion, byteVectorToString(env.rawPath),
-      byteVectorToString(env.queryString), env.rootPath);
+  getLogger()->info("[🚀] method: {0}", env.method);
+  getLogger()->info("[🚀] path: {0}", env.path);
+  getLogger()->info("[🚀] httpVersion: {0}", env.httpVersion);
+  getLogger()->info("[🚀] rawPath: {0}", byteVectorToString(env.rawPath));
+  getLogger()->info("[🚀] queryString: {0}",
+                    byteVectorToString(env.queryString));
+  getLogger()->info("[🚀] rootPath: {0}", env.rootPath);
+
   for (auto header : env.headers)
     getLogger()->info("[✨] {0}: {1}", byteVectorToString(header.first),
                       byteVectorToString(header.second));
+
   bool moreBody = false;
+  int64_t bodySize = 0;
+  int32_t numTurns = 0;
   do {
     server::ReceiveEvent re = receive();
     moreBody = re.moreBody;
-    getLogger()->info("[🎊] Received {} Bytes of the body", re.body.size());
+    bodySize += re.body.size();
+    numTurns++;
   } while (moreBody);
+  getLogger()->info("[🔥] Received {0} Bytes of the body in {1} turns",
+                    bodySize, numTurns);
   getLogger()->trace("###########################################");
 
   ////////////
   // RESPONSE
   ////////////
-  std::vector<std::pair<ByteVector, ByteVector>> responseHeaders{
-      {stringToByteVector("Content-Type"), stringToByteVector("text/html")}};
-
   send(server::SendEvent(server::SendEvent::EventTypeStart,
-                         http::HttpStatus::STATUS_200_OK, responseHeaders));
+                         http::HttpStatus::STATUS_200_OK,
+                         std::vector<std::pair<ByteVector, ByteVector>>{
+                             {stringToByteVector("Content-Type"),
+                              stringToByteVector("text/html")}}));
   send(server::SendEvent(
       server::SendEvent::EventTypeBody,
       stringToByteVector("<h1>A message generated from example server</h1>"),
