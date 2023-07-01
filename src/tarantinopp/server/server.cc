@@ -4,13 +4,10 @@
 
 namespace tarantinopp {
 namespace server {
-ApplicationServer::ApplicationServer(std::string name, Application application,
+ApplicationServer::ApplicationServer(ApplicationFn application,
                                      size_t blockSize,
                                      std::shared_ptr<Logger> logger)
-    : m_name(name),
-      m_application(application),
-      m_blockSize(blockSize),
-      m_logger(logger) {}
+    : m_application(application), m_blockSize(blockSize), m_logger(logger) {}
 
 void ApplicationServer::operator()(
     std::shared_ptr<network::SocketClient> client) {
@@ -20,41 +17,12 @@ void ApplicationServer::operator()(
   ReceiveFn receive = generateReceive(client, bufferedBody, env);
   SendFn send = generateSend(client, env);
 
-  // REQUEST
-  getLogger()->trace("###########################################");
-  getLogger()->info(
-      "[✅] method: {0}, path: {1}, httpVersion: {2}, rawPath: {3}, "
-      "queryString: {4}, rootPath: {5}",
-      env.method, env.path, env.httpVersion, byteVectorToString(env.rawPath),
-      byteVectorToString(env.queryString), env.rootPath);
-  for (auto header : env.headers)
-    getLogger()->info("[✨] {0}: {1}", byteVectorToString(header.first),
-                      byteVectorToString(header.second));
-  bool moreBody = false;
-  do {
-    ReceiveEvent re = receive();
-    moreBody = re.moreBody;
-    getLogger()->info("[🎊] Received {} Bytes of the body", re.body.size());
-  } while (moreBody);
-  getLogger()->trace("###########################################");
-
-  // RESPONSE
-  std::vector<std::pair<ByteVector, ByteVector>> responseHeaders{
-      {stringToByteVector("Content-Type"), stringToByteVector("text/html")}};
-
-  send(SendEvent(SendEvent::EventTypeStart, http::HttpStatus::STATUS_200_OK,
-                 responseHeaders));
-  send(SendEvent(
-      SendEvent::EventTypeBody,
-      stringToByteVector("<h1>A message generated from example server</h1>"),
-      false));
-
+  m_application(env, receive, send);
   client->disconnect();
 }
 
 std::shared_ptr<Logger> ApplicationServer::getLogger() {
-  if (m_logger == nullptr)
-    m_logger = std::make_shared<Logger>(m_name, LogLevel::debug);
+  if (m_logger == nullptr) throw std::runtime_error("logger not initiated");
   return m_logger;
 }
 

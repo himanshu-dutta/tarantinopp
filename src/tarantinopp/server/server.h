@@ -18,11 +18,11 @@
 namespace tarantinopp {
 namespace server {
 
-using Application = std::function<void(Environment, ReceiveFn, SendFn)>;
+using ApplicationFn = std::function<void(Environment, ReceiveFn, SendFn)>;
 
 class ApplicationServer {
  public:
-  ApplicationServer(std::string name, Application application,
+  ApplicationServer(ApplicationFn application,
                     size_t blockSize = MAX_BUFFER_SIZE,
                     std::shared_ptr<Logger> logger = nullptr);
   void operator()(std::shared_ptr<network::SocketClient>);
@@ -43,8 +43,7 @@ class ApplicationServer {
       ByteVector headers);
 
  private:
-  std::string m_name;
-  Application m_application;
+  ApplicationFn m_application;
   size_t m_blockSize;
   std::shared_ptr<Logger> m_logger;
 };
