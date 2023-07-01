@@ -41,20 +41,22 @@ class TCPSocketClient : public SocketClient {
 
 class TCPSocket : public Socket {
  public:
-  TCPSocket(const char* host, uint16_t port, uint32_t numBacklogs = 5,
-            int32_t numThreads = -1, std::shared_ptr<Logger> logger = nullptr);
+  TCPSocket(SocketApplication app, const char* host, uint16_t port,
+            uint32_t numBacklogs = 5, int32_t numThreads = -1,
+            std::shared_ptr<Logger> logger = nullptr);
   virtual ~TCPSocket();
 
   // implementation of functions of Server base class
 
-  void operator()(SocketApplication app) override;
+  void operator()() override;
   void shutdown() override;
   std::shared_ptr<Logger> getLogger() override;
 
  private:
-  uint32_t m_numBacklogs;
+  SocketApplication m_application;
   const char* m_host;
   uint16_t m_port;
+  uint32_t m_numBacklogs;
 
   int m_listenerSocketFd;
   sockaddr_in m_ServerAddr;

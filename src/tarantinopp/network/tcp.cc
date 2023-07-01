@@ -53,9 +53,10 @@ std::shared_ptr<Logger> TCPSocketClient::getLogger() { return m_logger; };
 TCPSocketClient::~TCPSocketClient() { disconnect(); }
 
 // TCP Server
-TCPSocket::TCPSocket(const char* host, uint16_t port, uint32_t numBacklogs,
-                     int32_t numThreads, std::shared_ptr<Logger> logger)
-    : m_workerThreadpool(numThreads), m_logger(logger) {
+TCPSocket::TCPSocket(SocketApplication app, const char* host, uint16_t port,
+                     uint32_t numBacklogs, int32_t numThreads,
+                     std::shared_ptr<Logger> logger)
+    : m_application(app), m_workerThreadpool(numThreads), m_logger(logger) {
   m_numBacklogs = numBacklogs;
   m_host = host;
   m_port = port;
@@ -79,7 +80,7 @@ TCPSocket::TCPSocket(const char* host, uint16_t port, uint32_t numBacklogs,
 
 TCPSocket::~TCPSocket() { shutdown(); }
 
-void TCPSocket::operator()(SocketApplication app) {
+void TCPSocket::operator()() {
   if ((listen(m_listenerSocketFd, m_numBacklogs)) < 0)
     throw std::runtime_error("unable to initiate listening on the open socket");
 
@@ -97,7 +98,7 @@ void TCPSocket::operator()(SocketApplication app) {
     std::shared_ptr<SocketClient> client(
         new TCPSocketClient(clientSocketFd, clientAddr, getLogger()));
     m_clients.push_back(client);
-    m_workerThreadpool.queueJob(app, client);
+    m_workerThreadpool.queueJob(m_application, client);
   }
 }
 

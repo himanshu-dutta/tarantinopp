@@ -44,12 +44,13 @@ class UnixSocketClient : public SocketClient {
 
 class UnixSocket : public Socket {
  public:
-  UnixSocket(std::string socketFilePath = "", uint32_t numBacklogs = 5,
-             int32_t numThreads = -1, std::shared_ptr<Logger> logger = nullptr);
+  UnixSocket(SocketApplication app, std::string socketFilePath = "",
+             uint32_t numBacklogs = 5, int32_t numThreads = -1,
+             std::shared_ptr<Logger> logger = nullptr);
   virtual ~UnixSocket();
 
   // implementation of functions of Server base class
-  void operator()(SocketApplication app) override;
+  void operator()() override;
   void shutdown() override;
 
   std::shared_ptr<Logger> getLogger() override;
@@ -58,9 +59,10 @@ class UnixSocket : public Socket {
   void populateServerAddress();
 
  private:
-  int32_t m_listenerSocketFd;
-  uint32_t m_numBacklogs;
+  SocketApplication m_application;
   std::string m_socketFilePath;
+  uint32_t m_numBacklogs;
+  int32_t m_listenerSocketFd;
   sockaddr_un m_serverAddr;
 
   std::vector<std::shared_ptr<SocketClient>> m_clients;

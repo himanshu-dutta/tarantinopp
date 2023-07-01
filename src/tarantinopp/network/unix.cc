@@ -42,9 +42,10 @@ std::shared_ptr<Logger> UnixSocketClient::getLogger() { return m_logger; }
 void UnixSocketClient::disconnect() { close(m_socketFd); }
 
 // Unix Socket Server
-UnixSocket::UnixSocket(std::string socketFilePath, uint32_t numBacklogs,
-                       int32_t numThreads, std::shared_ptr<Logger> logger)
-    : m_workerThreadpool(numThreads), m_logger(logger) {
+UnixSocket::UnixSocket(SocketApplication app, std::string socketFilePath,
+                       uint32_t numBacklogs, int32_t numThreads,
+                       std::shared_ptr<Logger> logger)
+    : m_application(app), m_workerThreadpool(numThreads), m_logger(logger) {
   m_socketFilePath =
       socketFilePath != "" ? socketFilePath : (std::string("./") + "socket");
   m_numBacklogs = numBacklogs;
@@ -70,7 +71,7 @@ UnixSocket::UnixSocket(std::string socketFilePath, uint32_t numBacklogs,
 
 UnixSocket::~UnixSocket() { shutdown(); }
 
-void UnixSocket::operator()(SocketApplication handler) {
+void UnixSocket::operator()() {
   if (listen(m_listenerSocketFd, m_numBacklogs) < 0)
     throw std::runtime_error("unable to initiate listening on the socket");
 
@@ -88,7 +89,7 @@ void UnixSocket::operator()(SocketApplication handler) {
     std::shared_ptr<SocketClient> client(
         new UnixSocketClient(clientSocketFd, clientAddr, getLogger()));
     m_clients.push_back(client);
-    m_workerThreadpool.queueJob(handler, client);
+    m_workerThreadpool.queueJob(m_application, client);
   }
 }
 

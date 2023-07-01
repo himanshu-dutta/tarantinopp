@@ -23,7 +23,7 @@ using SocketApplication = std::function<void(std::shared_ptr<SocketClient>)>;
 
 class Socket {
  public:
-  virtual void operator()(SocketApplication) = 0;
+  virtual void operator()() = 0;
   virtual void shutdown() = 0;
   virtual std::shared_ptr<Logger> getLogger() = 0;
 };
