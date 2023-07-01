@@ -103,10 +103,10 @@ void application_server_example() {
   using namespace tarantinopp::server;
 
   std::shared_ptr<Logger> logger(new Logger("example", LogLevel::trace));
+  logger->info("Starting the server...");
 
   Application app("example", logger);
-  ApplicationServer as(app, 2048, logger);
+  ApplicationServer as(app, 2 << 20, logger);
   UnixSocket server(as, "example.sock", 5, 1024, logger);
-  logger->info("Starting the server...");
   server();
 }
