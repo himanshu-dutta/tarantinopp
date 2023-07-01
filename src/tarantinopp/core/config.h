@@ -3,5 +3,5 @@
 #include <typeinfo>
 
 namespace tarantinopp {
-const size_t MAX_BUFFER_SIZE = 8192;
+const size_t MAX_BUFFER_SIZE = 2 << 20;
 }
