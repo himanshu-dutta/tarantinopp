@@ -80,7 +80,7 @@ TCPSocket::TCPSocket(SocketApplication app, const char* host, uint16_t port,
 
 TCPSocket::~TCPSocket() { shutdown(); }
 
-void TCPSocket::operator()() {
+void TCPSocket::run() {
   if ((listen(m_listenerSocketFd, m_numBacklogs)) < 0)
     throw std::runtime_error("unable to initiate listening on the open socket");
 

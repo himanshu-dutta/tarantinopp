@@ -50,7 +50,7 @@ class UnixSocket : public Socket {
   virtual ~UnixSocket();
 
   // implementation of functions of Server base class
-  void operator()() override;
+  void run() override;
   void shutdown() override;
 
   std::shared_ptr<Logger> getLogger() override;

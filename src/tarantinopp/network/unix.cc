@@ -71,7 +71,7 @@ UnixSocket::UnixSocket(SocketApplication app, std::string socketFilePath,
 
 UnixSocket::~UnixSocket() { shutdown(); }
 
-void UnixSocket::operator()() {
+void UnixSocket::run() {
   if (listen(m_listenerSocketFd, m_numBacklogs) < 0)
     throw std::runtime_error("unable to initiate listening on the socket");
 
