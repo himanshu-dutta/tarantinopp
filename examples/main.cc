@@ -63,7 +63,7 @@ void socket_tcp_example() {
 
   TCPSocket socket(handler, "0.0.0.0", 8000, 5, 1024, logger);
   socket.getLogger()->info("Starting the server...");
-  socket();
+  socket.run();
 }
 
 void socket_unix_example() {
@@ -94,7 +94,7 @@ void socket_unix_example() {
 
   UnixSocket socket(handler, "example.sock", 5, 1024, logger);
   socket.getLogger()->info("Starting the server...");
-  socket();
+  socket.run();
 }
 
 void application_server_example() {
@@ -108,5 +108,5 @@ void application_server_example() {
   Application app("example", logger);
   ApplicationServer as(app, 2 << 20, logger);
   UnixSocket server(as, "example.sock", 5, 1024, logger);
-  server();
+  server.run();
 }
